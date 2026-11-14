@@ -23,6 +23,7 @@ This project is not affiliated with, authorised by, or supported by Nikon. **Fla
 | Extensions menu | All switches in one row, "Extensions", at the end of the Setup menu | Yes |
 | DISP2 Custom (L21) | Independent level, histogram and detailed-info switches on the existing detailed shooting page; keeps simple-page basics and battery when details are off | L20 LCD/EVF reported working; L21 cleanup awaits camera recheck |
 | Test records | One-press record of a problem (`Z5LOG` folder) for feedback | Yes |
+| Burst speed-up (test) | Mechanical 233 → ~195 ms/frame (also in low light), silent 400 → ~300 ms/frame. **AF-S only: in AF-C focus also stays at the first frame, not for tracking.** Setup menu row "连拍提速" below the extension row, two switches (mechanical / electronic, default on); keeps "view all in continuous mode" off. See [docs/BURST_SPEED.md](docs/BURST_SPEED.md) (Chinese) | Parts camera-tested separately; combined build not yet |
 
 The new features have not been checked separately in the viewfinder or in movie mode, and restoring stock behaviour by removing the card has not been rechecked on the latest build. See [PLAN.md](PLAN.md) for completed and future work and [docs/PROGRESS.md](docs/PROGRESS.md) for development notes (both in Chinese).
 
@@ -62,7 +63,7 @@ output/card/SHUTTER/1-5.WAV      default test sounds (five)
 output/card/Z5LOG/DIAG01-20.BIN  20 empty test-record files
 ```
 
-The SHA-256 of `EG165050.BIN` should be `6389847f5ae1e65fb8b06569bde48252486ec1818041b076b03263c562b604bf`. Do not redistribute this file.
+The SHA-256 of `EG165050.BIN` should be `bf821031e6d0b7d5f8762eba7178db94adda90f91c8d078985039f4f1cad558e` (group 108 + burst speed-up entries). Do not redistribute this file.
 
 ### 3. Flash (once)
 

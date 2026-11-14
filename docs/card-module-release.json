@@ -46,8 +46,8 @@
   "lcd_walk_identity": "callback-entry SP +28 wrapper LR, +44 controller LR; exact native code checks",
   "lcd_final_submission_hook": false,
   "lcd_diagnostics": "L21: same R/U/C/F W/D/K/N metrics on last photo output (L21L/L21E); Q also reports page/activation refusal; H maximum independent-worker statistics-read elapsed ms since boot (hex, saturated FFF); S worker result (4 acquiring,5 failure,6 published)",
-  "output_sha256": "84559a1f55156b13bbf918bc329870f8b41e1b8ecb1ed5d608f3e2180a0e6318",
-  "output_size": 62068,
+  "output_sha256": "04bb0f3cfb214bd348f582e2d13854d8cab0f89e76202b8653d7c6b3c9c6892f",
+  "output_size": 64080,
   "custom_disp_settings": {
     "menu": "Extensions > DISP2 Custom",
     "flags": [
@@ -1329,35 +1329,37 @@
     "z5mod.ld": "eb739b180dea2e5e78a42362240a64a43420a2adf0e86238a8d58b52790062a6"
   },
   "source_hashes": {
-    "src/card_module/build.py": "6761316017b4ff9853e78678dad737f89696f4e62fd9c7ff9ddb77fbedb897c7",
-    "src/card_module/custom_disp/compatibility.json": "9a438d3605a5bf245175116e423c842bd1a738e9f0b3166adc3148df2de8b03d",
-    "src/card_module/custom_disp/compose.h": "37a10e7c761cdb3e993369ca40f8618b279ee2a631243e7d5f77f7c05c6afcc3",
-    "src/card_module/custom_disp/diagnostics.h": "e6a8927c3f6fdec1b34679d5f839f22a6868222fb980417678fcdf43e0876edd",
-    "src/card_module/custom_disp/display.c": "2df661630ba28149e804d3b18e8a3ea68a257999af47a9e0fa8801f52c6c8586",
-    "src/card_module/custom_disp/histogram.h": "2ecafdae367032ea1c8c033392a3cf28f975e687a40f4a437b43fc329dfe9dd2",
-    "src/card_module/custom_disp/histogram_raster.h": "4245759d4410af8d69590429413b09337137c008cf602bfe747265a13c9100e6",
-    "src/card_module/custom_disp/level.h": "570c2a963b23bcc4f9c42c7ad8a17958b7bac8563c344f3fe1cc9ddcccc71223",
-    "src/card_module/custom_disp/output.h": "61f52fb604cbf8db43150136b4fef32858f824c0350789b310a76165f6b82926",
-    "src/card_module/custom_disp/overlay_render.h": "0439b92c5fcf3a2f7f762ff4be8780c950563dbd7be46440d2502444d9a401b5",
-    "src/card_module/custom_disp/overlay_state.h": "d21137ccaba938a84869278dc6ba97a8bccd5a8f4fa308a53b0d3f744ce68a6f",
-    "src/card_module/custom_disp/platform.json": "e4a1b24f7c154c5d80764911c1c566444fb9fa2c4210ce501fb1f718b1e99d2f",
-    "src/card_module/custom_disp/refresh.h": "bd296e3a61b0e3ca0dbc57631ec72e253e0198abfa75fb7ff29176ce995bfbd5",
-    "src/card_module/custom_disp/refresh_override.h": "42a61a1f508451af9177b9eacd79c245e45b99708a8445077481b07790281464",
-    "src/card_module/custom_disp/responsive.h": "00f11c7a8230cd846eb6c45781383a0099df53168aab6248a064c6c4065e9fac",
-    "src/card_module/custom_disp/sdk_compat.h": "5c3ab0cff2f943067d71979065b4619b991e718643f699370320dc8cf95f9210",
-    "src/card_module/custom_disp/sdk_sources.json": "6e0ea598b02450f610abe69d9edbb1f1722c00e38430aa2751ed5beb4cab1b19",
-    "src/card_module/custom_disp/smooth.h": "9adf20520a08bc3743c98a854e562499b579b43d3f067dd16fd81243d92a226d",
-    "src/card_module/custom_disp/sparse.h": "fbf8e1f65fa693b41755729c28be83cce449af60a9cbcd6991521d7ab64d47c2",
-    "src/card_module/custom_disp/target.h.in": "25f53188682a20ba150b74170fe93a22e3e93a44886b8b258f1218a7cfd130dc",
-    "src/card_module/custom_disp.h": "659bfca8eb63011c88502cd05d2a5eef574b35e5015b3241b562daac1df81a7b",
-    "src/card_module/custom_disp_install.inc": "845bc8705c44c6488a4ac64f3e72d0e00a50a787a53f3c4452d221137d30d0c9",
-    "src/card_module/custom_disp_runtime.inc": "834eed526279a0e740cd7378eb89435412853d0a797dcd229da80ee127a6b33f",
-    "src/card_module/main.c": "dcff6aef2af18efc3c6b3cb1c48e8bab9e0f695b4570a56b3b39778f0ec2cfe8",
-    "src/card_module/vui_card.inc": "f38b1b71995cfdf6aa2963b4477f25e556620699d40803887bf2d86872a43f9f",
-    "src/card_module/z5mod-sdk.patch": "d68e378f9f0c2a08e3cbccb2d0dd89279a8b0d9046e4a47e7772e1c8435a545f"
+    "src/card_module/build.py": "4d6280810656e30e9e1dacd55b5b4af57f46c1ad256aab6d50277502a8d2f5b0",
+    "src/card_module/custom_disp/compatibility.json": "eef8cf648dcf8a4c70590cf4db6245b08283f198fea98edfdb9bd9fcbebec945",
+    "src/card_module/custom_disp/compose.h": "0c16b43d0150cc01eb99d5c415200aa97632761f4d5eb138f2d32ff5dd1523fa",
+    "src/card_module/custom_disp/diagnostics.h": "759628e254de2c4d958437b99d86c5c2fde12a752c5ac904854ec30be54be1c6",
+    "src/card_module/custom_disp/display.c": "980aafd48adcf2b7ae88ed0d687f047e9412281fefe9b1f5b83ddf7c4e902fc0",
+    "src/card_module/custom_disp/histogram.h": "70fbbd9d482f97aebd14667aa1add50701a9c853da3538f171d51606e57222e9",
+    "src/card_module/custom_disp/histogram_raster.h": "43ff489e69a8f37e603acfaa1d96b4c1d9b7195c2fe08d2fdbd27fc6cde8fd0f",
+    "src/card_module/custom_disp/level.h": "6aabafcc316ca178947294742e756c7e1ef29b38632dfec274985de880d1a66c",
+    "src/card_module/custom_disp/output.h": "1c60ce68f4c180f5618f242767da8682e6d33ef386901c83e88312034fd3609c",
+    "src/card_module/custom_disp/overlay_render.h": "6111823849d33a36a90010872e315d0c98fb7a44b70f22999c0e7734b487914a",
+    "src/card_module/custom_disp/overlay_state.h": "7cf4c99a7d3e7dd374336ad4577955b895892accc2fb96e847084009e327d90d",
+    "src/card_module/custom_disp/platform.json": "17afcea6168cc88d269827ee410f2e1f4b1b7aeb7e7e61fad616c1656defcd5a",
+    "src/card_module/custom_disp/refresh.h": "f27d1a8444294a84db912d2efb562d455d8e5a5977ab7bd38507b49e555e31ad",
+    "src/card_module/custom_disp/refresh_override.h": "8b2aace43d61f33c37416745b0d415658e484c4b29eae0a3ee6763e918777ee9",
+    "src/card_module/custom_disp/responsive.h": "407514203795314e91b9e80dc3420a7a3759fac53830773cbb7ab0800b868d8a",
+    "src/card_module/custom_disp/sdk_compat.h": "3383ca9eabb703db3ac0212c3b992689d2e324ea5d6eefcd90cc74dccf9c744f",
+    "src/card_module/custom_disp/sdk_sources.json": "99233f9618c0a3ffeb5dbade25eedccd936f23ca9662ea5cb135a96f67ef8049",
+    "src/card_module/custom_disp/smooth.h": "4b315522cc8f6fbf6a27c1a82276b99ac4a689164dd091b7ec00bab7184de7df",
+    "src/card_module/custom_disp/sparse.h": "615637ee49c2b3f3f8c4ea1998c5c2735d3569082145f6f56c1e2de57df09959",
+    "src/card_module/custom_disp/target.h.in": "8c528f6db4ac12fe74ade08946bc5bc00540c69e5365dd8b88546344edaaa263",
+    "src/card_module/custom_disp.h": "7f1f2d92d6c3bcf6242b29d29c71964655d3b9e882e11d364649ae861982eff8",
+    "src/card_module/custom_disp_install.inc": "11427d804dd5fc26c73e49652a96c5e799f3c7e7f22a9d6a5b93fa04ddde8c4d",
+    "src/card_module/custom_disp_runtime.inc": "f80f8904f46cdfb228ede822a649c40d60fcff7213a4ea2a99f99d41167e9a00",
+    "src/card_module/main.c": "7f66a2b3855b664a55f4ade6024acd3bcc7eb4a2f28b8ddf7b371e26666c23b5",
+    "src/card_module/vui_card.inc": "12a44cc1f94e7ae3b5ce4314f424f7266dd2f151efbddf3507f4235c3b9afc4e",
+    "src/card_module/z5mod-sdk.patch": "3ff80018dde9c025e07f1c6b03e5bf915f87b342388d31395c7d046ca1b65e4c",
+    "src/card_module/burst_speed.inc": "c7c97983fe609903f2008a8223079c3c2240bca84352194f9ab30d6b148d8f16",
+    "src/card_module/burst_speed_install.inc": "33b337f39d249709241aad7a13fc2e008afbad525a24c2bea187062766d6187b"
   },
   "compiler_version": "14.3.1",
-  "limitations": "Build and static checks only. Camera timing, portrait layout and wake need hardware verification.",
+  "limitations": "Build, Unicorn and static checks only; not run in the emulator or on the camera as a combined build. Build and static checks only. Camera timing, portrait layout and wake need hardware verification.",
   "verification": {
     "host_tests": [
       "custom_disp: synthetic masks and both accepted firmware initializers",
@@ -1394,5 +1396,20 @@
       "sha256": "711f14e101cbf5a4b547219c7d0523835f64d100dda8d95491af20cc8cfce248",
       "scope": "user reports EVF level and histogram display restored; not a full combination acceptance test"
     }
+  },
+  "firmware_with_burst_entries_sha256": "bf821031e6d0b7d5f8762eba7178db94adda90f91c8d078985039f4f1cad558e",
+  "burst_speed": {
+    "setup_row": "连拍提速 (slot 254, id 0x2FCA); switches 机械/电子 (slots 255/256, ids 0x2FCB/0x2FCC), default on, MENU.DAT word 2 bits 4/5 = off",
+    "firmware_flag_word": "P+0x14 = 0xBF5A1C00 | bit0 immediate go | bit1 no live-view return; interval P+0x18/0x1C mech 7 silent 5",
+    "holds_removed": [
+      86,
+      60,
+      61,
+      89,
+      63
+    ],
+    "view_all_setting": "0x112C kept 0 (inferred off) while a switch is on",
+    "camera_verified": "parts separately (research L41-L51); combined build not run on camera or emulator",
+    "af_note": "AF-S only; focus and exposure stay at the first frame"
   }
 }

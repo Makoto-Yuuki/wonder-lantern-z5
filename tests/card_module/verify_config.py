@@ -22,7 +22,9 @@ typedef uint32_t u32;
 #define STYLE_STOCK 0u
 #define STYLE_CROSS 2u
 #define FW(type,name) name
-typedef struct {u32 edited,save_err,stage,saves,on,type,vol,grid,zebra,vui,focal_on,bat_on,touch_on,custom_flags,cfg_state;char cfg_path[24];}cm_t;
+#define BURST_CFG_MECH_OFF 0x10u
+#define BURST_CFG_SIL_OFF 0x20u
+typedef struct {u32 edited,save_err,stage,saves,on,type,vol,grid,zebra,vui,focal_on,bat_on,touch_on,custom_flags,cfg_state,burst_mech,burst_sil;char cfg_path[24];}cm_t;
 static unsigned char file[16];static u32 length=8,exists=1;
 static void zero_words(u32 *p,u32 n){memset(p,0,n*4);}
 static void FW_BIND(u32 *f,char *path){(void)f;(void)path;}
@@ -34,11 +36,18 @@ static void FW_WRITE(u32 handle,void *data,u32 count,u32 *out){(void)handle;memc
 int main(void){
  cm_t c={0};u32 legacy[2]={CFG_MAGIC,1u|(2u<<8)|(4u<<16)|(1u<<27)};
  memcpy(file,legacy,8);assert(!cfg_load(&c));assert(c.custom_flags==15&&c.vui==1&&c.type==2&&c.vol==4);
+ assert(c.burst_mech==1&&c.burst_sil==1);   /* burst speed-up: on unless switched off */
  for(u32 flags=0;flags<16;flags++){
   c.custom_flags=flags;save_cfg(&c);assert(length==12&&!memcmp(file,legacy,8));
   cm_t fresh={0};assert(!cfg_load(&fresh));assert(fresh.custom_flags==flags&&fresh.type==2&&fresh.vol==4);
  }
- ((u32 *)file)[2]=0x11110000;assert(!cfg_load(&c));assert(c.custom_flags==15);
+ for(u32 b=0;b<4;b++){            /* burst switches round-trip and leave the other settings alone */
+  c.custom_flags=5;c.burst_mech=b&1;c.burst_sil=(b>>1)&1;save_cfg(&c);assert(length==12&&!memcmp(file,legacy,8));
+  cm_t fresh={0};assert(!cfg_load(&fresh));
+  assert(fresh.custom_flags==5&&fresh.burst_mech==(b&1)&&fresh.burst_sil==((b>>1)&1)&&fresh.type==2&&fresh.vol==4);
+ }
+ c.burst_mech=1;c.burst_sil=1;
+ ((u32 *)file)[2]=0x11110000;assert(!cfg_load(&c));assert(c.custom_flags==15&&c.burst_mech==1&&c.burst_sil==1);
  length=8;assert(!cfg_load(&c));assert(c.custom_flags==15);
  exists=0;assert(cfg_load(&c)==1&&c.custom_flags==15);
  return 0;
@@ -48,4 +57,4 @@ with tempfile.TemporaryDirectory(prefix='z5-custom-config-') as t:
  p=Path(t);(p/'check.c').write_text(code)
  subprocess.run(['cc','-std=c11','-Wall','-Wextra','-Werror',str(p/'check.c'),'-o',str(p/'check')],check=True)
  subprocess.run([str(p/'check')],check=True)
-print('PASS: legacy 8-byte settings, 16 flag combinations round-trip, native settings preserved, invalid extension and missing file')
+print('PASS: legacy 8-byte settings, 16 flag combinations round-trip, burst switches round-trip (default on), native settings preserved, invalid extension and missing file')

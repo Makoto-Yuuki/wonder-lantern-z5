@@ -13,6 +13,7 @@
 #include "z5/state.h"
 #include "z5/str.h"
 #include "z5/ui.h"
+#include "z5/task.h"
 #include "custom_disp.h"
 
 #define SEQ_BOOT      2u
@@ -186,6 +187,8 @@
 
 /* --- persistent state (z5_state_user) ------------------------------------- */
 #define CM_MAGIC      0x554E4D43u      /* 'CMNU' */
+#define BURST_CFG_MECH_OFF 0x10u        /* MENU.DAT word 2: mechanical burst speed-up off (burst_speed.inc) */
+#define BURST_CFG_SIL_OFF  0x20u        /* MENU.DAT word 2: electronic (silent) burst speed-up off */
 #define CFG_MAGIC     0x4D53355Au      /* 'Z5SM' */
 #define L_EN          20u
 #define L_HZ          8u
@@ -330,6 +333,12 @@ typedef struct {
     char hist_text[48u * 2u];  /* L9: room for the existing metrics plus histogram wait H. */
     u32 vui_hist_last_publication; /* L11: packet last rasterized into the current LCD bank */
     u32 custom_flags, custom_hdr, custom_state;
+    /* Burst speed-up (burst_speed.inc). Switches: MENU.DAT word 2 bits 4/5 = mechanical/electronic off. */
+    u32 burst_mech, burst_sil;      /* switches, default on */
+    u32 burst_removed, burst_tick;  /* holds this module took out of the blocking set; view-all check tick */
+    u32 burst_viewall_off;          /* times "view all in continuous mode" was switched off */
+    u32 burst_task_rc;              /* 0 or why the task did not start / stopped */
+    u32 burst_row, burst_rows, burst_hdr;   /* setup row; the switch page's rows and header */
 } cm_t;
 
 typedef signed short s16;
@@ -492,7 +501,8 @@ IMG_FN static void save_cfg(cm_t *c)
     FW(close_fn, FW_CLOSE)(f);
     zero_words(f, 16);
     data[0] = CFG_MAGIC;
-    data[2] = 0xD2150000u | (c->custom_flags & 15u);
+    data[2] = 0xD2150000u | (c->custom_flags & 15u) |
+              (c->burst_mech ? 0u : BURST_CFG_MECH_OFF) | (c->burst_sil ? 0u : BURST_CFG_SIL_OFF);
     data[1] = c->on | (c->type << 8) | (c->vol << 16) | (c->grid << 24) | (c->zebra << 26) | (c->vui << 27) |
               ((c->focal_on ? 0u : 1u) << 28) |  /* group 104: bit 28 = focal display off */
               ((c->bat_on ? 0u : 1u) << 29) |    /* group 116: bit 29 = battery display off */
@@ -723,6 +733,7 @@ IMG_FN static u32 cfg_load(cm_t *c)
     c->custom_flags = 15u;
     c->on = 1u; c->type = 1u; c->vol = 5u; c->grid = STYLE_STOCK; c->zebra = 0u; c->vui = 0u; c->focal_on = 1u;
     c->bat_on = 1u; c->touch_on = 1u;
+    c->burst_mech = 1u; c->burst_sil = 1u;
     FW(bind_fn, FW_BIND)(f, c->cfg_path);
     if ((u32)FW(open_fn, FW_OPEN)(f, 0, 0) == FS_OPEN_OK) {
         FW(readat_fn, FW_READAT)(f, data, 0, 8u);
@@ -732,7 +743,11 @@ IMG_FN static u32 cfg_load(cm_t *c)
     }
     c->cfg_state = state;
     if (!state) {
-        if ((data[2] & 0xFFFFFFF0u) == 0xD2150000u) c->custom_flags = data[2] & 15u;
+        if ((data[2] & 0xFFFF0000u) == 0xD2150000u) {
+            c->custom_flags = data[2] & 15u;
+            c->burst_mech = !(data[2] & BURST_CFG_MECH_OFF);   /* burst speed-up switches */
+            c->burst_sil = !(data[2] & BURST_CFG_SIL_OFF);
+        }
         u32 on = data[1] & 0xFFu, type = (data[1] >> 8) & 0xFFu, vol = (data[1] >> 16) & 0xFFu;
         if (on <= 1u) c->on = on;
         if (type >= 1u && type <= 5u) c->type = type;
@@ -774,6 +789,7 @@ IMG_FN static u32 title_cb(u32 page, u32 a1, u32 a2, u32 a3)
 }
 
 IMG_FN static void hub_labels(cm_t *c);
+IMG_FN static void burst_label(cm_t *c);     /* burst_speed.inc */
 IMG_FN static void hub_open(cm_t *c);
 
 IMG_FN static void sub_title(cm_t *c, const u16 *hz, const char *en);
@@ -1367,11 +1383,13 @@ IMG_FN static void hub_labels(cm_t *c)
     if (c->bat_hdr) bat_label(c);
     if (c->custom_hdr) custom_label(c);
     if (c->touch_hdr) touch_label(c);          /* group 119 */
+    if (c->burst_row) burst_label(c);          /* burst speed-up setup row */
 #ifdef VUI_DIAG_FOCUS
     save_label(c);
 #endif
 }
 
+#include "burst_speed.inc"  /* image code: must stay before Z5_IMAGE_END */
 #include "vui_card.inc"   /* research/vertical-ui/vui_card.inc in the development tree */
 
 /* Grid rows: choose the style, then let the stock "On" handler turn the grid on. */
@@ -1652,6 +1670,7 @@ static u32 install_touch_page(cm_t *c, u32 *title, u32 first_map)
 }
 
 #include "custom_disp_install.inc"
+#include "burst_speed_install.inc"
 
 /* Group 116: the hub view: one row per feature, each opening its view. Rows shaped like the owned page's. */
 static u32 install_hub(cm_t *c, u32 *title, u32 first_map)
@@ -1664,10 +1683,11 @@ static u32 install_hub(cm_t *c, u32 *title, u32 first_map)
     if (c->touch_hdr) { slots[n] = SLOT_T_ENTRY; ids[n] = ID_T_ENTRY; fns[n++] = img_addr(c, touch_entry_ok); }   /* group 119 */
     if (c->focal_hdr) { slots[n] = SLOT_F_ENTRY; ids[n] = ID_F_ENTRY; fns[n++] = img_addr(c, focal_entry_ok); }
     if (c->bat_hdr) { slots[n] = SLOT_B_ENTRY; ids[n] = ID_B_ENTRY; fns[n++] = img_addr(c, bat_entry_ok); }
+    if (c->custom_hdr) { slots[n] = 253u; ids[n] = 0x2FD0u; fns[n++] = img_addr(c, custom_entry_ok); }
+    /* Feature rows go above this line: the save row is always the last one. */
 #ifdef VUI_DIAG_FOCUS
     slots[n] = SLOT_SAVE; ids[n] = ID_SAVE; fns[n++] = img_addr(c, save_ok);
 #endif
-    if (c->custom_hdr) { slots[n] = 253u; ids[n] = 0x2FD0u; fns[n++] = img_addr(c, custom_entry_ok); }
     if (n < 3u) return 70u;                    /* the layout list starts at 3 rows */
     const u32 *layout = 0;
     for (k = 0; k < 8u; k++)                   /* group 119: the list is not in row order (3,4,5,6,6,7,8) */
@@ -1710,7 +1730,7 @@ static u32 install_menu(cm_t *c)
 
     /* SETUP: 41 stock rows + row 42 (copy of row 41 with our slot, flags, id). */
     u32 vui_ok = c->fx && *(volatile u16 *)VUI_SITE != 0xE92Du;
-    u32 extra = 1u;                            /* group 116: one row, "扩展功能"; the features are on its hub */
+    u32 extra = 2u;                            /* group 116: "扩展功能" (features on its hub); "连拍提速" */
     u32 *rows = (u32 *)z5_alloc((STOCK_ROWS + extra) * ROW_SIZE, 0);
     u32 *disp = (u32 *)z5_alloc((STOCK_ROWS + extra) * 4u, 0);
     if (!rows || !disp) return 13u;
@@ -1724,6 +1744,15 @@ static u32 install_menu(cm_t *c)
     disp[STOCK_ROWS] = build_map(((const u32 *)SETUP_DISP)[STOCK_ROWS - 1u], img_addr(c, entry_ok), STAY);
     if (!disp[STOCK_ROWS]) return 14u;
     c->entry_row = (u32)entry;
+    {   /* burst speed-up: its own setup row below "扩展功能" (the hub has no room for a ninth row) */
+        u32 *b = entry + ROW_WORDS;
+        copy_words(b, entry, ROW_WORDS);
+        b[0] = BURST_SLOT_ENTRY;
+        b[6] = BURST_ID_ENTRY;
+        disp[STOCK_ROWS + 1u] = build_map(((const u32 *)SETUP_DISP)[STOCK_ROWS - 1u], img_addr(c, burst_entry_ok), STAY);
+        if (!disp[STOCK_ROWS + 1u]) return 27u;
+        c->burst_row = (u32)b;
+    }
     if (0) {                                   /* group 116: these rows are on the hub now */
         u32 *z = entry + ROW_WORDS;
         copy_words(z, entry, ROW_WORDS);
@@ -1795,6 +1824,7 @@ static u32 install_menu(cm_t *c)
     if (vui_ok && install_bat_page(c, title, first_map) != 1u) c->bat_hdr = 0u;   /* group 116 */
     if (vui_ok && install_touch_page(c, title, first_map) != 1u) c->touch_hdr = 0u;   /* group 119 */
     if (install_custom_page(c, title, first_map) != 1u) return 90u;
+    if (install_burst_page(c, title, first_map) != 1u) c->burst_hdr = 0u;   /* burst speed-up switches */
     if (install_hub(c, title, first_map) != 1u) c->hub_hdr = 0u;                   /* group 116 */
 
     /* Labels before anything can show them. */
@@ -1925,6 +1955,7 @@ static void first_run(cm_t *c)
     c->install = install_menu(c);
     if (c->vui_install == 1u) { vui_label(c); focal_label(c); c->vui_fn = img_addr(c, vui_hook); }
     hub_labels(c);                             /* group 116 */
+    if (c->install == 1u) burst_start(c);      /* burst speed-up task */
 #ifdef VUI_DIAG_FOCUS
     if (c->vui_install == 1u) c->vui_tp_fn = img_addr(c, vui_tp_hit);   /* group 91: touch recorder */
 #endif

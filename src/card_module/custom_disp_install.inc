@@ -8,7 +8,7 @@ static u32 install_custom_page(cm_t *c, u32 *title, u32 first_map)
     c->custom_state = (u32)s;
     copy_u16(s->hz[0],16,(const u16 *)u"DISP2自定义"); copy_str(s->en[0],24,"DISP2 Custom");
     copy_u16(s->hz[1],16,(const u16 *)u"自定义显示"); copy_str(s->en[1],24,"Custom display");
-    copy_u16(s->hz[2],16,(const u16 *)u"水平仪"); copy_str(s->en[2],24,"Level");
+    copy_u16(s->hz[2],16,(const u16 *)u"水平线"); copy_str(s->en[2],24,"Level");
     copy_u16(s->hz[3],16,(const u16 *)u"直方图"); copy_str(s->en[3],24,"Histogram");
     copy_u16(s->hz[4],16,(const u16 *)u"详细信息"); copy_str(s->en[4],24,"Detailed info");
     u32 fns[4];

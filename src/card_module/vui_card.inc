@@ -134,7 +134,7 @@ IMG_FN static u32 vui_locate_lv(s32_v x, s32_v y, s32_v w, s32_v h, s32_v *px, s
     if (x < 80 && y >= 392 && y < 430 && w >= 20) { *px = x + 416; *py = y + 60; return 1u; }   /* battery (x 2, 60 wide): against the right edge (group 87) */
     if (x >= 80 && x < 127 && y >= 392 && y < 430) { *px = x - 26; *py = y + 242; return 1u; }   /* MF focus indicator: before the distance bar's end icon (group 104) */
     if (x >= 127 && x < 180 && y >= 392 && y < 430) { *px = x + 10; *py = y + 242; return 1u; }
-    if (x >= 620 && y >= 388 && y < 430) { *px = x - 346; *py = y - 360; return 1u; }   /* Bluetooth: second row, after REAR */
+    if (x >= 620 && y >= 388 && y < 430) { *px = x - 346; *py = y - 354; return 1u; }   /* Bluetooth: second row, after REAR; 6 px down, clear of the wider daylight WB icon (L22) */
     if (x < 50 && y >= 430) { *px = x + 8; *py = y + 160; return 1u; }      /* metering: left column under VR (Z50II); readout names its eraser */
     if (x >= 695 && y >= 425) { *px = x - 259; *py = y + 240; return 1u; }   /* flash ready (yellow): bottom row, right of ISO (user) */
     if (x >= 677 && y >= 425) { *px = x - 227; *py = y + 126; return 1u; }   /* "k": into the closing bracket's place, "[ 1.7k]" (under i, group 99) */
