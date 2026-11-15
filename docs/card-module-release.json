@@ -46,8 +46,8 @@
   "lcd_walk_identity": "callback-entry SP +28 wrapper LR, +44 controller LR; exact native code checks",
   "lcd_final_submission_hook": false,
   "lcd_diagnostics": "L21: same R/U/C/F W/D/K/N metrics on last photo output (L21L/L21E); Q also reports page/activation refusal; H maximum independent-worker statistics-read elapsed ms since boot (hex, saturated FFF); S worker result (4 acquiring,5 failure,6 published)",
-  "output_sha256": "04bb0f3cfb214bd348f582e2d13854d8cab0f89e76202b8653d7c6b3c9c6892f",
-  "output_size": 64080,
+  "output_sha256": "72bda74564fc2453610a8eae4c85358368d93020b3cf9565131ee0253d559a30",
+  "output_size": 64004,
   "custom_disp_settings": {
     "menu": "Extensions > DISP2 Custom",
     "flags": [
@@ -1329,8 +1329,8 @@
     "z5mod.ld": "eb739b180dea2e5e78a42362240a64a43420a2adf0e86238a8d58b52790062a6"
   },
   "source_hashes": {
-    "src/card_module/build.py": "4d6280810656e30e9e1dacd55b5b4af57f46c1ad256aab6d50277502a8d2f5b0",
-    "src/card_module/custom_disp/compatibility.json": "eef8cf648dcf8a4c70590cf4db6245b08283f198fea98edfdb9bd9fcbebec945",
+    "src/card_module/build.py": "66969e07de5fbac1a2ad397df7a7785866cfcb5d27d395d0560b2ae2a34145fd",
+    "src/card_module/custom_disp/compatibility.json": "79be08a0bdb0be656390b978d256c8695f71f7d21b417e65f72b3ab9d14a49c1",
     "src/card_module/custom_disp/compose.h": "0c16b43d0150cc01eb99d5c415200aa97632761f4d5eb138f2d32ff5dd1523fa",
     "src/card_module/custom_disp/diagnostics.h": "759628e254de2c4d958437b99d86c5c2fde12a752c5ac904854ec30be54be1c6",
     "src/card_module/custom_disp/display.c": "980aafd48adcf2b7ae88ed0d687f047e9412281fefe9b1f5b83ddf7c4e902fc0",
@@ -1352,14 +1352,14 @@
     "src/card_module/custom_disp.h": "7f1f2d92d6c3bcf6242b29d29c71964655d3b9e882e11d364649ae861982eff8",
     "src/card_module/custom_disp_install.inc": "11427d804dd5fc26c73e49652a96c5e799f3c7e7f22a9d6a5b93fa04ddde8c4d",
     "src/card_module/custom_disp_runtime.inc": "f80f8904f46cdfb228ede822a649c40d60fcff7213a4ea2a99f99d41167e9a00",
-    "src/card_module/main.c": "7f66a2b3855b664a55f4ade6024acd3bcc7eb4a2f28b8ddf7b371e26666c23b5",
+    "src/card_module/main.c": "7e659a6327e53640b720eca25c53c5ee49f97933b088bfb2d3f39d46c10988c7",
     "src/card_module/vui_card.inc": "12a44cc1f94e7ae3b5ce4314f424f7266dd2f151efbddf3507f4235c3b9afc4e",
     "src/card_module/z5mod-sdk.patch": "3ff80018dde9c025e07f1c6b03e5bf915f87b342388d31395c7d046ca1b65e4c",
-    "src/card_module/burst_speed.inc": "c7c97983fe609903f2008a8223079c3c2240bca84352194f9ab30d6b148d8f16",
+    "src/card_module/burst_speed.inc": "c10236578cb6da374f2b7ad91af7c024722881b903a653729560dd4857a7b090",
     "src/card_module/burst_speed_install.inc": "33b337f39d249709241aad7a13fc2e008afbad525a24c2bea187062766d6187b"
   },
   "compiler_version": "14.3.1",
-  "limitations": "Build, Unicorn and static checks only; not run in the emulator or on the camera as a combined build. Build and static checks only. Camera timing, portrait layout and wake need hardware verification.",
+  "limitations": "Build, Unicorn and static checks only; emulator-checked (boot, menu, switch page); not yet camera-checked as a combined build. Build and static checks only. Camera timing, portrait layout and wake need hardware verification.",
   "verification": {
     "host_tests": [
       "custom_disp: synthetic masks and both accepted firmware initializers",
@@ -1408,8 +1408,9 @@
       89,
       63
     ],
-    "view_all_setting": "0x112C kept 0 (inferred off) while a switch is on",
+    "view_all_setting": "not touched by the module (any write hung the camera/emulator, 2026-11-16); users switch it off",
     "camera_verified": "parts separately (research L41-L51); combined build not run on camera or emulator",
-    "af_note": "AF-S only; focus and exposure stay at the first frame"
+    "af_note": "AF-S only; focus and exposure stay at the first frame",
+    "fix_2026_11_16": "04bb0f3c hung at power-on (setting write from the task); 72bda745 removes it; emulator: boots, opens the 连拍提速 page, toggles and saves"
   }
 }

@@ -10,6 +10,7 @@ import binascii
 import hashlib
 import importlib.util
 import json
+import os
 from pathlib import Path
 import re
 import struct
@@ -171,7 +172,7 @@ def main():
     image = args.firmware.read_bytes()
     if sha(image) != compatibility['firmware_sha256'] or binascii.crc_hqx(image, 0):
         ap.error('requires the exact group-108 MAIN with valid CRC')
-    if manifest['output_sha256'] != compatibility['firmware_sha256']:
+    if manifest['output_sha256'] not in (compatibility['firmware_sha256'], *compatibility.get('release_firmware_sha256', {})):
         ap.error('repository firmware version changed; re-audit the port')
     sdk = args.sdk.resolve()
     sdk_hashes = json.loads((HERE / 'custom_disp/sdk_sources.json').read_text())
@@ -227,7 +228,7 @@ def main():
                        '-I', str(HERE), '-include', str(HERE / 'custom_disp/sdk_compat.h'),
                        '-Wl,--no-fix-cortex-a8']
     # Keep the production group-119 diagnostic recorder and save-record menu.
-    builder.build(HERE / 'main.c', args.output, defs=['-DVUI_DIAG_FOCUS'])
+    builder.build(HERE / 'main.c', args.output, defs=['-DVUI_DIAG_FOCUS'] + os.environ.get('Z5_EXTRA', '').split())   # Z5_EXTRA: emulator/test defines only
     elf = out / 'obj/main.elf'
     subprocess.run([sys.executable, str(sdk / 'tools/imgcheck.py'), str(elf)], check=True)
     branches = retained_branch_checks(elf)

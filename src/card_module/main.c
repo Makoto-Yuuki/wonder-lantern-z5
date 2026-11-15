@@ -335,7 +335,7 @@ typedef struct {
     u32 custom_flags, custom_hdr, custom_state;
     /* Burst speed-up (burst_speed.inc). Switches: MENU.DAT word 2 bits 4/5 = mechanical/electronic off. */
     u32 burst_mech, burst_sil;      /* switches, default on */
-    u32 burst_removed, burst_tick;  /* holds this module took out of the blocking set; view-all check tick */
+    u32 burst_removed, burst_tick;  /* holds this module took out of the blocking set; view-all state (L54) */
     u32 burst_viewall_off;          /* times "view all in continuous mode" was switched off */
     u32 burst_task_rc;              /* 0 or why the task did not start / stopped */
     u32 burst_row, burst_rows, burst_hdr;   /* setup row; the switch page's rows and header */

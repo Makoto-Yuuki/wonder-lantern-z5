@@ -5,11 +5,13 @@
  *     (list A at 0xC18A89E0, firmware remove 0x10062860 / add back 0x100628A6), so the next frame does not
  *     wait for live view to come back (L41);
  *   - burst interval words for the firmware entry at 0x10192F96: mechanical code 7 (125 ms), silent code 5
- *     (166 ms); the shutter and readout still limit the real rate (L43);
+ *     (166 ms); the shutter and readout still limit the real rate (L43-L51 on camera: ~195 / ~300 ms);
  *   - flag word for the firmware entries at 0x10206E6C (low-light immediate go, L48) and 0x1020857A (no
- *     "back to live view" after each shot, L50): P + 0x14 = 0xBF5A1C00 | 3 while the current mode is on;
- *   - "View all in continuous mode" (setting 0x112C) is kept off while either switch is on: with it on the
- *     screen can stay black after a sped-up burst (user, 2026-11-15). 0 = off (menu row order; inferred).
+ *     "back to live view" after each shot, L50): P + 0x14 = 0xBF5A1C00 | BURST_FLAG_BITS while the mode is on.
+ *   The shutter lock seen with the first release (2026-11-16) was the start-up hang below, not these values;
+ *   BURST_MECH_CODE / BURST_FLAG_BITS / BURST_DO_HOLD stay overridable (-D) for bisecting.
+ *   - "View all in continuous mode" (setting 0x112C) is left alone (L56): any module write to it hung the
+ *     camera / emulator; users switch it off themselves (with it on the screen can stay black after a burst).
  * Exposure and focus stay at the first frame (as in an "extended" burst): suited to AF-S, not to tracking.
  * Measured: mechanical 233 -> ~195 ms (also in low light, stock ~270), silent 400 -> ~300 ms.
  */
@@ -21,16 +23,24 @@
 #define BURST_ID_SIL      0x2FCCu
 /* MENU.DAT word 2 bits BURST_CFG_MECH_OFF / BURST_CFG_SIL_OFF are defined in main.c (default on). */
 
-#define BURST_SETTING_WRITE 0x104560A4u    /* u32 write(key, value) */
-#define BURST_VIEW_ALL      0x112Cu        /* ViewAllInContinuousMode: 1 = on, 0 = off */
 #define BURST_BLOCK_SET     0xC18A89E0u    /* list A: [0] bit count, [1] word pointer */
 #define BURST_HOLD_REMOVE   0x10062861u    /* remove id from list A (locks, notifies) */
 #define BURST_HOLD_ADD      0x100628A7u    /* add id to list A */
 #define BURST_HOLD_IDS      0x3F593D3Cu    /* 0x3c 0x3d 0x59 0x3f; plus 0x56 */
 #define BURST_FLAG_MAGIC    0xBF5A1C00u
 #define BURST_RATE_MAGIC    0xB5000000u
+#ifndef BURST_MECH_CODE
 #define BURST_MECH_CODE     7u             /* 125 ms */
+#endif
+#ifndef BURST_SIL_CODE
 #define BURST_SIL_CODE      5u             /* 166 ms */
+#endif
+#ifndef BURST_DO_HOLD
+#define BURST_DO_HOLD       1u             /* take 0x56/0x3c/0x3d/0x59/0x3f out of the blocking set (L41) */
+#endif
+#ifndef BURST_FLAG_BITS
+#define BURST_FLAG_BITS     3u             /* P + 0x14 = 0xBF5A1C00 | bits: bit0 immediate go, bit1 no live-view return */
+#endif
 #define BURST_SLEEP ((s32 (*)(u32))0x100363A8u)  /* same sleep the custom DISP task uses */
 #define BURST_EXIT  ((void (*)(void))0x100360E4u)
 #define BURST_TIMEOUT (-3276800)
@@ -48,11 +58,12 @@ IMG_FN static void burst_words(cm_t *c, u32 flags)
     *(volatile u32 *)(p + 0x14u) = flags ? (BURST_FLAG_MAGIC | flags) : 0u;
 }
 
-/* One pass: holds, flags and the view-all setting for the current mode. */
+/* One pass: holds and flag words for the current mode. Never touches camera settings (see below). */
 IMG_FN static void burst_step(cm_t *c)
 {
     u32 silent = *(volatile u8 *)SILENT_BYTE == 2u;
     u32 active = silent ? c->burst_sil : c->burst_mech;
+#if BURST_DO_HOLD
     u32 nbits = *(volatile u32 *)BURST_BLOCK_SET, words = *(volatile u32 *)(BURST_BLOCK_SET + 4u);
     if (nbits > 0x60u && nbits <= 0x400u && words >= RAM_LO && words < RAM_HI) {
         for (u32 k = 0u; k < 5u; k++) {
@@ -66,14 +77,10 @@ IMG_FN static void burst_step(cm_t *c)
             }
         }
     }
-    burst_words(c, active ? 3u : 0u);
-    if ((c->burst_mech || c->burst_sil) && ++c->burst_tick >= 10u) {   /* about every 0.5 s */
-        c->burst_tick = 0u;
-        if (FW(read_fn, SETTING_READ)(BURST_VIEW_ALL) != 0u) {
-            ((u32 (*)(u32, u32))BURST_SETTING_WRITE)(BURST_VIEW_ALL, 0u);
-            c->burst_viewall_off += 1u;
-        }
-    }
+#endif
+    burst_words(c, active ? BURST_FLAG_BITS : 0u);
+    /* L56: no camera-setting access from this task. Writing 0x112C here (L53 every 0.5 s, L54 once)
+     * hangs the camera at power-on (emulator: start never completes; camera: shutter locked). */
 }
 
 IMG_FN static void burst_task(u32 unused)
@@ -150,6 +157,10 @@ IMG_FN static void burst_row_label(cm_t *c, u32 silent)
         r[4] = (r[4] & ~(F_ASCII | F_UTF16)) | (c->hans ? F_UTF16 : F_ASCII);
     }
 }
+
+/* "View all in continuous mode" (0x112C) is NOT changed by the module (L56): writing it from the module's
+ * task hung the camera at power-on, and writing it from the menu handler hung the emulator as well.
+ * Users switch it off themselves (docs/BURST_SPEED.md); with it on the screen can stay black after a burst. */
 
 /* Setup row OK: the switch page, titled "连拍提速". */
 IMG_FN static u32 burst_entry_ok(u32 a0, u32 a1, u32 a2, u32 a3)

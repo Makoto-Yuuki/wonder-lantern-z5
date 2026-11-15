@@ -12,5 +12,8 @@
     "experiment_vui_sha256": "79e946f4da4e5c7dea0a9f8c4fd9171cf4eaf946713d21785e88d0afac17c36d",
     "module": "portrait group 119 + L18 custom DISP"
   },
-  "sdk_base_commit": "8cf0fb425a4988abdb9442f33a2773c7a242dc23"
+  "sdk_base_commit": "8cf0fb425a4988abdb9442f33a2773c7a242dc23",
+  "release_firmware_sha256": {
+    "bf821031e6d0b7d5f8762eba7178db94adda90f91c8d078985039f4f1cad558e": "group 108 + burst speed-up entries 0x10192F96, 0x10206E6C, 0x1020857A (+ veneers, append); none overlaps the module probe/function windows (audited 2026-11-15); the module is still built from the group-108 MAIN"
+  }
 }
