@@ -88,7 +88,7 @@ IMG_FN static void burst_task(u32 unused)
     (void)unused;
     for (;;) {
         cm_t *c = cm_get();
-        if (c) burst_step(c);
+        if (c) { burst_step(c); c->burst_tick += 1u; }
         s32 rc = BURST_SLEEP(50u);
         if (rc != 0 && rc != BURST_TIMEOUT) {
             if (c) c->burst_task_rc = 0xE0000000u | ((u32)rc & 0xFFFFFFu);

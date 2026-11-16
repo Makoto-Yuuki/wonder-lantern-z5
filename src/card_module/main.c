@@ -29,6 +29,9 @@
 #define RAM_HI        0xC8700000u
 
 #define SETTING_READ  0x10456098u      /* u32 read(key)                          */
+/* 2026-11-16: 0x1400 turned out to be image quality, not the language (JPG reads 3 = "English").
+ * Until the real language setting is known the module's own rows are always Simplified Chinese. */
+#define CM_HANS       1u
 #define LANG_KEY      0x1400u
 #define LANG_ENGLISH  3u               /* read in the emulator with English UI; every
                                          * other language gets Simplified Chinese */
@@ -335,7 +338,7 @@ typedef struct {
     u32 custom_flags, custom_hdr, custom_state;
     /* Burst speed-up (burst_speed.inc). Switches: MENU.DAT word 2 bits 4/5 = mechanical/electronic off. */
     u32 burst_mech, burst_sil;      /* switches, default on */
-    u32 burst_removed, burst_tick;  /* holds this module took out of the blocking set; view-all state (L54) */
+    u32 burst_removed, burst_tick;  /* holds this module took out of the blocking set; task passes */
     u32 burst_viewall_off;          /* times "view all in continuous mode" was switched off */
     u32 burst_task_rc;              /* 0 or why the task did not start / stopped */
     u32 burst_row, burst_rows, burst_hdr;   /* setup row; the switch page's rows and header */
@@ -449,7 +452,7 @@ IMG_FN static void set_label(cm_t *c, u32 row)
 /* Follow the current language: label kind of every row, then all labels. */
 IMG_FN static void refresh_labels(cm_t *c)
 {
-    u32 hans = FW(read_fn, SETTING_READ)(LANG_KEY) != LANG_ENGLISH;
+    u32 hans = CM_HANS;
     u32 kind = hans ? F_UTF16 : F_ASCII;
     c->hans = hans;
     if (c->entry_row) {
@@ -535,6 +538,23 @@ IMG_FN static void diag_write(cm_t *c)
     for (i = 0; i < 0x14u / 4u; i++) b[0xC80u / 4u + i] = ((const volatile u32 *)DG_LAYERS)[i];
     b[13] = c->dg_frozen; b[14] = c->dg_left;
     b[15] = 119u;                              /* group 116: module group that wrote this record */
+    {   /* burst speed-up state, 6 words at 0xDA0 (free: layers end at 0xD94, ring counters start at 0xDF0):
+         * q0 = 'BS' << 16 | list-A bits of the five holds << 11 | holds removed << 6 | silent byte (4 bits) << 2
+         *      | switches (bit 0 mechanical, bit 1 electronic); q1 task result; q2 P + 0x14; q3 P + 0x18;
+         * q4 task passes; q5 sizeof(cm_t) */
+        u32 *q = b + 0xDA0u / 4u;
+        u32 p = *(volatile u32 *)Z5_STATE_SLOT, ok = p >= RAM_LO && p < RAM_HI && *(volatile u32 *)Z5_STATE_CHECK == ~p;
+        u32 words = *(volatile u32 *)0xC18A89E4u, bits = 0u;
+        if (words >= RAM_LO && words < RAM_HI)
+            for (u32 k = 0u; k < 5u; k++) {
+                u32 id = k ? (0x3F593D3Cu >> (8u * (k - 1u))) & 0xFFu : 0x56u;
+                if (((volatile u32 *)words)[id >> 5] & (1u << (id & 31u))) bits |= 1u << k;
+            }
+        q[0] = 0x53420000u | (bits << 11) | ((c->burst_removed & 31u) << 6) | ((*(volatile u8 *)SILENT_BYTE & 15u) << 2) |
+               (c->burst_mech & 1u) | ((c->burst_sil & 1u) << 1);
+        q[1] = c->burst_task_rc; q[2] = ok ? *(volatile u32 *)(p + 0x14u) : 0xFFFFFFFFu;
+        q[3] = ok ? *(volatile u32 *)(p + 0x18u) : 0xFFFFFFFFu; q[4] = c->burst_tick; q[5] = sizeof(cm_t);
+    }
     {   /* group 106: firmware words at the two touch entries, hook calls per kind, header 0x40-0x8F */
         u32 *q = b + 0x40u / 4u;
         q[0] = 0x4B4F4F48u;                    /* 'HOOK' */
@@ -1931,7 +1951,7 @@ static void first_run(cm_t *c)
     c->lang = FW(read_fn, SETTING_READ)(LANG_KEY);
     c->phase = PH_DUAL;
     enable_dual_display(c);
-    c->hans = FW(read_fn, SETTING_READ)(LANG_KEY) != LANG_ENGLISH;
+    c->hans = CM_HANS;
     c->phase = PH_IMAGE;
     c->image = (u32)z5_img_copy(release_cb, release_cb_end) & ~1u;
     if (!c->image) { c->install = 17u; return; }
@@ -2016,7 +2036,7 @@ static int show_stop(z5_ctx *ctx)
 {
     u32 note = ((volatile u32 *)Z5_ANCHOR)[3];
     char *line = (char *)STOP_TEXT;
-    u32 pos = FW(read_fn, SETTING_READ)(LANG_KEY) != LANG_ENGLISH
+    u32 pos = CM_HANS
         ? puts16(line, STOP_CHARS, 0u, (const u16 *)u"未启用")
         : z5_puts(line, STOP_CHARS, 0u, "NO ");
     pos = z5_puts(line, STOP_CHARS, pos, "X");
@@ -2034,7 +2054,7 @@ static int show_unfinished(z5_ctx *ctx, cm_t *s)
     char *line = (char *)STOP_TEXT;
     u32 ms = *(volatile u32 *)CM_MS_CLOCK - s->start_ms, sec = 0u;
     while (ms >= 1000u && sec < 99u) { ms -= 1000u; sec++; }
-    u32 pos = FW(read_fn, SETTING_READ)(LANG_KEY) != LANG_ENGLISH
+    u32 pos = CM_HANS
         ? puts16(line, STOP_CHARS, 0u, (const u16 *)u"未完成")
         : z5_puts(line, STOP_CHARS, 0u, "RUN");
     pos = z5_puts(line, STOP_CHARS, pos, "P");
@@ -2130,7 +2150,7 @@ int z5_main(z5_ctx *ctx)
     u32 pos = z5_puts(line, TEXT_CHARS, 0u, "AE");
     pos = z5_puthex(line, TEXT_CHARS, pos, (u32)(-c->custom_disp_rc), 2u);
     pos = z5_puts(line, TEXT_CHARS, pos, " ");
-    u32 hans = FW(read_fn, SETTING_READ)(LANG_KEY) != LANG_ENGLISH;
+    u32 hans = CM_HANS;
     if (c->dual && !c->err && c->install == 1u && !c->cfg_state) {
 #ifdef VUI_DIAG         /* oldest first: application.ui.target, then the entries seen in the quality-label area */
         {
