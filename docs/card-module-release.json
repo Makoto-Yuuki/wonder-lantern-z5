@@ -1409,7 +1409,7 @@
       63
     ],
     "view_all_setting": "not touched by the module (any write hung the camera/emulator, 2026-11-16); users switch it off",
-    "camera_verified": "parts separately (research L41-L51); combined build not run on camera or emulator",
+    "camera_verified": "combined build afed83a9 + bf821031 on camera 2026-11-16: boots, mechanical ~195 ms (FX and DX); silent ~380 ms, not yet effective",
     "af_note": "AF-S only; focus and exposure stay at the first frame",
     "fix_2026_11_16": "04bb0f3c hung at power-on (setting write from the task); 72bda745 removes it; emulator: boots, opens the 连拍提速 page, toggles and saves",
     "labels": "always Simplified Chinese (2026-11-16): 0x1400 is image quality, not the language",
