@@ -477,6 +477,7 @@ IMG_FN static void zero_words(u32 *p, u32 words)
 #define DG_POST    3000u               /* records kept after a trigger before the ring freezes */
 #endif
 #define DG_MAGIC   0x4744355Au         /* 'Z5DG' */
+#define DG_SEQ_OFF 0xBCu               /* record sequence number (cycling records, 2026-11-14) */
 #define DG_EV_OFF  0x1000u
 #define DG_EV_SIZE 48u
 #define DG_TE_OFF  (DG_SIZE - 0x1000u)  /* group 92: touch events, 256 x 16 bytes, count at 0xDF8 */
@@ -1234,21 +1235,28 @@ IMG_FN static void diag_save(cm_t *c)
     u32 f[16], w0, i, s;
     char *p = c->dg_path;
     for (s = 0u; s < 2u; s++) {
+        u32 empty = 0u, oldest = 0u, low = 0xFFFFFFFFu, high = 0u, seq;
         for (i = 1u; i <= DG_FILES; i++) {
             dg_name(p, s, i);
             zero_words(f, 16);
             FW(bind_fn, FW_BIND)(f, p);
             if ((u32)FW(open_fn, FW_OPEN)(f, 0, 0) != FS_OPEN_OK) break;
-            w0 = 0u;
+            w0 = 0u; seq = 0u;
             FW(readat_fn, FW_READAT)(f, &w0, 0, 4u);
+            FW(readat_fn, FW_READAT)(f, &seq, DG_SEQ_OFF, 4u);
             FW(close_fn, FW_CLOSE)(f);
-            if (w0 != DG_MAGIC) {
-                diag_write(c);
-                c->dg_ix = c->dg_res ? 0xFEu : i;
-                return;
-            }
+            if (w0 != DG_MAGIC) { if (!empty) empty = i; continue; }
+            if (seq < low) { low = seq; oldest = i; }
+            if (seq > high) high = seq;
         }
-        if (i > 1u) { c->dg_ix = 0xFFu; return; }   /* this folder has the files and all hold records: full */
+        if (i > 1u) {                          /* this folder has numbered files: first empty one, else the oldest */
+            u32 k = empty ? empty : oldest;
+            dg_name(p, s, k);
+            if (c->dg_buf) ((u32 *)c->dg_buf)[DG_SEQ_OFF / 4u] = high + 1u;
+            diag_write(c);
+            c->dg_ix = c->dg_res ? 0xFEu : k;
+            return;
+        }
     }
     dg_name(p, 1u, 0u);                        /* no numbered files on this card: the old single file */
     diag_write(c);

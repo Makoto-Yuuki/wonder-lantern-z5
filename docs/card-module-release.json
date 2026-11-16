@@ -46,8 +46,8 @@
   "lcd_walk_identity": "callback-entry SP +28 wrapper LR, +44 controller LR; exact native code checks",
   "lcd_final_submission_hook": false,
   "lcd_diagnostics": "L21: same R/U/C/F W/D/K/N metrics on last photo output (L21L/L21E); Q also reports page/activation refusal; H maximum independent-worker statistics-read elapsed ms since boot (hex, saturated FFF); S worker result (4 acquiring,5 failure,6 published)",
-  "output_sha256": "1893b0978afe06e8fb184fadb9819efee0e2a148fce867f5d811b2d3e6b18a5d",
-  "output_size": 64096,
+  "output_sha256": "afed83a92b0b92d53448630f6d1ba69ca6257440b7951af65d58cd09677fa70e",
+  "output_size": 64184,
   "custom_disp_settings": {
     "menu": "Extensions > DISP2 Custom",
     "flags": [
@@ -1352,7 +1352,7 @@
     "src/card_module/custom_disp.h": "7f1f2d92d6c3bcf6242b29d29c71964655d3b9e882e11d364649ae861982eff8",
     "src/card_module/custom_disp_install.inc": "11427d804dd5fc26c73e49652a96c5e799f3c7e7f22a9d6a5b93fa04ddde8c4d",
     "src/card_module/custom_disp_runtime.inc": "f80f8904f46cdfb228ede822a649c40d60fcff7213a4ea2a99f99d41167e9a00",
-    "src/card_module/main.c": "69f923c95a5640b90d6a59937f677c0be807f0c7a505720731b9b8bd55c12e3f",
+    "src/card_module/main.c": "ffdf267b8acbf4093f231b24ec89cc58d46b11fb22468d5e6d3b89d5a77aa075",
     "src/card_module/vui_card.inc": "12a44cc1f94e7ae3b5ce4314f424f7266dd2f151efbddf3507f4235c3b9afc4e",
     "src/card_module/z5mod-sdk.patch": "3ff80018dde9c025e07f1c6b03e5bf915f87b342388d31395c7d046ca1b65e4c",
     "src/card_module/burst_speed.inc": "0ea74622ff166f8070a4a3ebfe011a869eae8f17bf058bbce41c226704a0b69c",
@@ -1413,6 +1413,7 @@
     "af_note": "AF-S only; focus and exposure stay at the first frame",
     "fix_2026_11_16": "04bb0f3c hung at power-on (setting write from the task); 72bda745 removes it; emulator: boots, opens the 连拍提速 page, toggles and saves",
     "labels": "always Simplified Chinese (2026-11-16): 0x1400 is image quality, not the language",
-    "record_block": "test records hold the burst state at offset 0xDA0 (6 words, magic 0x5342 in the top half)"
+    "record_block": "test records hold the burst state at offset 0xDA0 (6 words, magic 0x5342 in the top half)",
+    "record_cycle": "20 files in the Z5LOG folder; when all hold records the oldest is overwritten (sequence number at header 0xBC, 2026-11-16)"
   }
 }
