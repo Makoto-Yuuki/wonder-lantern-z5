@@ -120,6 +120,12 @@ def target_header(image):
                 (0x103489E8, 4), (0x1042D5FA, 4), (0x1042C7A4, 4),
                 (0x104555AA, 4), (0x10455712, 4), (0x10455570, 4)]
     ram = profile['ram_init']
+    wb_descriptor = struct.unpack('<I', read(0x10748504 + 38 * 4, 4))[0]
+    wb_init = ram['source'] + wb_descriptor - ram['destination']
+    if wb_descriptor != 0xC1826534 or struct.unpack('<I', read(wb_init + 44, 4))[0] != 0xC1826474:
+        raise ValueError('native white-balance descriptor differs')
+    # Group 38 uses the mode/fine-adjust icon table in this native updater.
+    windows += [(0x10748504 + 38 * 4, 4), (wb_init, 48), (0x1032D3BE, 68)]
     key_init = ram['source'] + 0xC18289E0 - ram['destination']
     if int.from_bytes(read(key_init + 0x14, 4), 'little') != 0x10304109:
         raise ValueError('native normal-key RAM callback initialization differs')
@@ -281,7 +287,7 @@ def main():
     inputs = [HERE / 'main.c', HERE / 'vui_card.inc', HERE / 'custom_disp.h', Path(__file__).resolve(),
               *(HERE / 'custom_disp').glob('*'), HERE / 'custom_disp_runtime.inc', HERE / 'custom_disp_install.inc', HERE / 'burst_speed.inc', HERE / 'burst_speed_install.inc', HERE / 'z5mod-sdk.patch']
     report = dict(camera_verified=False, dynamic_tests_run=False,
-        firmware_modified=False, upstream_commit='b8ffd1c', release_firmware_sha256=manifest['output_sha256'], variant="L39-logical-disp-menu-fix", compatibility=compatibility, firmware_sha256=sha(image),
+        firmware_modified=False, upstream_commit='b8ffd1c', release_firmware_sha256=manifest['output_sha256'], variant="L39-logical-disp-menu-wb-fix", compatibility=compatibility, firmware_sha256=sha(image),
         source_cleanup=dict(module="custom_disp", single_rendering_path=True,
             removed_paths=["layer_cache", "lcd_clock", "lcd_async", "native_overlay", "rectangle_level", "source_rebinding", "independent_evf_surface_fallback", "legacy_force3_restore", "unread_evf_window_metrics"],
             removed_unused_stencil_bytes=124944, removed_evf_metadata_words=6, metadata_words=32, state_revision="0x112D0018"),
@@ -291,7 +297,7 @@ def main():
         lcd_final_submission_hook=False,
         lcd_diagnostics='L39: same R/U/C/F W/D/K/N metrics on last photo output (L39L/L39E); Q also reports page/activation refusal; H maximum independent-worker statistics-read elapsed ms since boot (hex, saturated FFF); S worker result (4 acquiring,5 failure,6 published)',
         output_sha256=sha(args.output.read_bytes()), output_size=args.output.stat().st_size,
-        custom_disp_settings=dict(menu='Extensions > Custom DISP > DISP0..DISP3', menu_text_slots=[257,258,259,260,261], setup_entry_text_slot=250, flags=['reserved_enable','typea_level','histogram','detailed_info','native_level'], master_switch=True, logical_pages=True, remembered_pages_per_output=True, native_base=0, default_flags=562223, page_count=4, bits_per_page=5, page_names=["detailed", "simple", "histogram", "level"], level_choices=['off','native','TypeA'], native_level=dict(enabled=True, outputs=['LCD','EVF'], policy='All logical pages use native DISP0; scoped native pose/setup once per APPLV callback; Off/TypeA disarms all four dirty-only children; both leading guards installed outside traversal', pose='0x104BA04C', show='0x1032C290', parent_rebinding=True, mode_writes=True, native_callback_replacement=False, bitmap_cache=False, native_disp_identity_unchanged=False), persistence='16-byte MENU.DAT: D8 preferences and burst-off bits20/21, CD50 master/LCD/EVF logical-page memory; read 8/12-byte legacy transactionally', visibility_groups=list(range(64)), native_base_when_info_off="unmodified DISP1 masks projected to native DISP0; DISP0 masks when details on", projected_disp_mask="native DISP0 bit 0x111111 only; choose preferences by logical page", outputs=["LCD","EVF"]),
+        custom_disp_settings=dict(menu='Extensions > Custom DISP > DISP0..DISP3', menu_text_slots=[257,258,259,260,261], setup_entry_text_slot=250, flags=['reserved_enable','typea_level','histogram','detailed_info','native_level'], master_switch=True, logical_pages=True, remembered_pages_per_output=True, native_base=0, default_flags=562223, page_count=4, bits_per_page=5, page_names=["detailed", "simple", "histogram", "level"], level_choices=['off','native','TypeA'], native_level=dict(enabled=True, outputs=['LCD','EVF'], policy='All logical pages use native DISP0; scoped native pose/setup once per APPLV callback; Off/TypeA disarms all four dirty-only children; both leading guards installed outside traversal', pose='0x104BA04C', show='0x1032C290', parent_rebinding=True, mode_writes=True, native_callback_replacement=False, bitmap_cache=False, native_disp_identity_unchanged=False), persistence='16-byte MENU.DAT: D8 preferences and burst-off bits20/21, CD50 master/LCD/EVF logical-page memory; read 8/12-byte legacy transactionally', visibility_groups=list(range(64)), native_base_when_info_off="DISP1 masks projected to native DISP0, additionally hide white-balance group38; DISP0 masks when details on", projected_disp_mask="native DISP0 bit 0x111111 only; choose preferences by logical page", outputs=["LCD","EVF"]),
         logical_disp_routing=dict(key_slot='0xC18289F4', original_key='0x10304109',
             entry='retained cm custom_key_dispatch', native_input_prefix_and_suffix=True,
             native_disp_eligibility='0x10341AAA once; transient native simple selection remapped before GUI',

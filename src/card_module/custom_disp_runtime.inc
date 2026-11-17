@@ -33,6 +33,9 @@ IMG_FN static u32 custom_project_mask(u32 value, u32 flags, u32 group)
         /* Group 32 is the native histogram; enabled pages use our worker and
          * CPU raster instead, regardless of the detailed/simple base. */
         if (group == 32u) baseline = 0u;
+        /* White-balance group 38 is also permitted on stock simple DISP1.
+         * Treat it as detailed information for our custom pages. */
+        if (group == 38u && !(flags & 8u)) baseline = 0u;
         result = (result & ~bits) | baseline;
     }
     return result;

@@ -10,6 +10,7 @@ profile=json.loads((ROOT/'src/card_module/custom_disp/platform.json').read_text(
 # Synthetic descriptor masks allow all host checks without a private firmware file.
 initializers=[[[((i+j)%16)*0x111111 for j in range(12)] for i in range(64)]]
 initializers[0][18]=[0xffffff]*12
+initializers[0][38]=[0x0ff1ff]*12
 initializers[0][37][1]=1
 
 for image in images:
@@ -29,6 +30,13 @@ for image in images:
  payload=struct.unpack('<I',read(descriptor+44,4))[0]
  assert struct.unpack('<4H',read(payload+10,8))==(2,396,62,428)
  assert all((groups[18][j]&3)==3 for j in (1,3,4,6,7,9))
+ # White balance: stock simple page permits it; both outputs' footprint.
+ descriptor=struct.unpack('<I',read(0x10748504+38*4,4))[0]
+ assert descriptor==0xc1826534
+ payload=struct.unpack('<I',read(descriptor+44,4))[0]
+ assert payload==0xc1826474
+ assert struct.unpack('<8H',read(payload+10,16))==(592,2,660,38,854,288,922,324)
+ assert all(groups[38][j]==0x0ff1ff for j in (1,3,4,6,7,9))
  initializers.append(groups)
 source=(ROOT/'src/card_module/custom_disp_runtime.inc').read_text().split('IMG_FN static void custom_label')[0]
 source=source.replace('#include "custom_disp/route.inc"', '')
@@ -65,7 +73,7 @@ static u32 expected_mask(u32 value,u32 flags,u32 group) {
  u32 expected=value;
  for(u32 mode=0;mode<6;mode++){
   u32 bit=1u<<(mode*4),src=mode*4+((flags&8)?0u:1u);
-  if(group!=32u&&(value&(1u<<src)))expected|=bit;else expected&=~bit;
+  if(group!=32u&&(group!=38u||(flags&8u))&&(value&(1u<<src)))expected|=bit;else expected&=~bit;
  }
  return expected;
 }
@@ -119,6 +127,9 @@ int main(void) {
  custom_apply(&c);assert(!c.vui_hm_saved);
  for(u32 j=0;j<9;j++)assert(hist_masks[j]==c.vui_hm[j]);
  assert((custom_project_mask(0xffffff,15u,18)&0x111111u)==0x111111u);
+ assert(!(custom_project_mask(0x0ff1ff,1u,38u)&0x111111u));
+ assert(custom_project_mask(0x0ff1ff,9u,38u)==0x0ff1ff);
+ assert(custom_project_mask(0x0ff1ff,0u,38u)==0x0ff1ff);
  c.custom_control=3|(4u<<4);assert(!custom_current_flags(&c));
  return 0;
 }
@@ -127,4 +138,4 @@ with tempfile.TemporaryDirectory(prefix='z5-custom-host-') as temp:
  path=Path(temp);(path/'check.c').write_text(preamble+source+harness)
  subprocess.run(['cc','-std=c11','-Wall','-Wextra','-Werror',str(path/'check.c'),'-o',str(path/'check')],check=True)
  subprocess.run([str(path/'check')],check=True)
-print(f'PASS: synthetic masks + {len(images)} firmware initializers, four logical pages on native DISP0, both outputs/16 canonical flags, all nibble/base combinations and transitions, unmodified sources, native histogram suppression, battery, foreign writes, portrait shadow and restoration')
+print(f'PASS: synthetic masks + {len(images)} firmware initializers, four logical pages on native DISP0, both outputs/16 canonical flags, all nibble/base combinations and transitions, unmodified sources, native histogram suppression, white-balance detail toggle/restoration, battery, foreign writes, portrait shadow and restoration')

@@ -31,6 +31,8 @@ The new features have not been checked separately in the viewfinder or in movie 
 
 L39 menu revision: Custom DISP now uses separate text slots, fixing the Extensions setup label being replaced by DISP3 Level after leaving the menu with a shutter half-press. Chinese/English host regressions and the cross-build pass; the physical half-press exit still needs camera confirmation.
 
+L39 white-balance fix: turning detailed information off additionally hides the stock white-balance widget (group 38), which stock simple-page permissions also allow. Turning details back on or disabling Custom DISP restores its permissions. Host logic is covered; camera validation is pending.
+
 L38 protects settings reads and saves: only a complete, valid configuration is applied; failed startup reads retry from the GUI callback every 500ms until successful. Edits and saves are blocked until a valid configuration is loaded. Saves overwrite the existing file without truncating it first, then reopen and verify its size and contents. Cold-start persistence still needs camera validation.
 
 On the first camera save, the existing `MENU.DAT` grows to 16 bytes: D8 preferences plus a CD50 master/page-memory word. Legacy 8-byte and D215/D216/D7 12-byte files remain readable. Existing page preferences are retained; any old page master enables the new global master. Legacy files start logical page memory at DISP0. Packages do not overwrite personal `MENU.DAT`; back it up because older modules cannot read the new 16-byte format.

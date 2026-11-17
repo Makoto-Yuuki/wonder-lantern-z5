@@ -4,7 +4,7 @@
   "firmware_modified": false,
   "upstream_commit": "b8ffd1c",
   "release_firmware_sha256": "bf821031e6d0b7d5f8762eba7178db94adda90f91c8d078985039f4f1cad558e",
-  "variant": "L39-logical-disp-menu-fix",
+  "variant": "L39-logical-disp-menu-wb-fix",
   "compatibility": {
     "firmware_group": 108,
     "card_base_group": 119,
@@ -52,8 +52,8 @@
   "lcd_walk_identity": "callback-entry SP +28 wrapper LR, +44 controller LR; exact native code checks",
   "lcd_final_submission_hook": false,
   "lcd_diagnostics": "L39: same R/U/C/F W/D/K/N metrics on last photo output (L39L/L39E); Q also reports page/activation refusal; H maximum independent-worker statistics-read elapsed ms since boot (hex, saturated FFF); S worker result (4 acquiring,5 failure,6 published)",
-  "output_sha256": "42153482d1921b169257cbc2e15c3ae5c9d84ec19a576279ca398cdcc76019b1",
-  "output_size": 75812,
+  "output_sha256": "c3c05d4e7d9948ada8c0383ed59bedb7b60729cbf31f509b8c2a003499a3dad8",
+  "output_size": 76176,
   "custom_disp_settings": {
     "menu": "Extensions > Custom DISP > DISP0..DISP3",
     "menu_text_slots": [
@@ -171,7 +171,7 @@
       62,
       63
     ],
-    "native_base_when_info_off": "unmodified DISP1 masks projected to native DISP0; DISP0 masks when details on",
+    "native_base_when_info_off": "DISP1 masks projected to native DISP0, additionally hide white-balance group38; DISP0 masks when details on",
     "projected_disp_mask": "native DISP0 bit 0x111111 only; choose preferences by logical page",
     "outputs": [
       "LCD",
@@ -981,6 +981,21 @@
       "fnv1a": 3134644696
     },
     {
+      "address": 276071836,
+      "length": 4,
+      "fnv1a": 798538947
+    },
+    {
+      "address": 302294280,
+      "length": 48,
+      "fnv1a": 2869535975
+    },
+    {
+      "address": 271766462,
+      "length": 68,
+      "fnv1a": 2019301892
+    },
+    {
       "address": 302303668,
       "length": 44,
       "fnv1a": 1828651030
@@ -1748,6 +1763,21 @@
       "fnv1a": 3134644696
     },
     {
+      "address": 276071836,
+      "length": 4,
+      "fnv1a": 798538947
+    },
+    {
+      "address": 302294280,
+      "length": 48,
+      "fnv1a": 2869535975
+    },
+    {
+      "address": 271766462,
+      "length": 68,
+      "fnv1a": 2019301892
+    },
+    {
       "address": 302303668,
       "length": 44,
       "fnv1a": 1828651030
@@ -1876,8 +1906,8 @@
     },
     {
       "name": "release_cb",
-      "size": 31768,
-      "direct_branches": 2038
+      "size": 31788,
+      "direct_branches": 2043
     }
   ],
   "sdk_hashes": {
@@ -1912,7 +1942,7 @@
     "z5mod.ld": "eb739b180dea2e5e78a42362240a64a43420a2adf0e86238a8d58b52790062a6"
   },
   "source_hashes": {
-    "src/card_module/build.py": "27713ba6695f60b1d7a2702ec31432c354c24d842ac17ef56e5ba5bc0b866b5d",
+    "src/card_module/build.py": "bd6d02f58a6962cb52ef99b330538bfb7ff1b8e37878208c40660355e4a5e04d",
     "src/card_module/burst_speed.inc": "fcce2aa9e7ed9ab19f5556f6abac861559242231f2f29c53d8aee85e37b3d1ee",
     "src/card_module/burst_speed_install.inc": "8348ac172e15262dee063a142550dc5f02868ad74282598e27baa7abec6abe47",
     "src/card_module/custom_disp/compatibility.json": "47b68a36c2edba6931ab5de6af8673e5d18c476cc5a383b1f48e49c0c90b89df",
@@ -1939,7 +1969,7 @@
     "src/card_module/custom_disp/target.h.in": "53bfe79d6774c8af9d77d8d06dfac39e0e499c70d104f1e91969b3c765a1864a",
     "src/card_module/custom_disp.h": "dc9da9d32e617c8d18049ea8e495b76e229cdceab5e651e8874493df5567a8b3",
     "src/card_module/custom_disp_install.inc": "3de846ba55e5f572a0df76ae2f939ca4b40a36c3f9d7642d09fbf8967587acbc",
-    "src/card_module/custom_disp_runtime.inc": "3e276c718ee4702ed347315fa52203681297c9637f07212278d636336fe72c8b",
+    "src/card_module/custom_disp_runtime.inc": "5374a7c2289000489f26dee5692c5b390ed4109fcf1252656693447aff269751",
     "src/card_module/main.c": "f5a8f31b9d02da8a9bb210faf9e9c95c886fc26d8c0d26da1f5eab860243d615",
     "src/card_module/vui_card.inc": "a306acf641908ccfea72477b33d0cbbaba2fc41ef1fb497cfae2098f8509a137",
     "src/card_module/z5mod-sdk.patch": "d68e378f9f0c2a08e3cbccb2d0dd89279a8b0d9046e4a47e7772e1c8435a545f"
@@ -1966,7 +1996,7 @@
     },
     "host_validation_scope": "Actual retained C helpers with mocked native properties/input/GUI; settings format and output/cycle transitions. No Nikon GUI/ISP/ARM execution or camera timing tested.",
     "firmware_patch_payload_unchanged": true,
-    "firmware_patch_payload_reference": "pre-menu-label-fix working tree; all patch_data keys except card_module_sha256 unchanged",
+    "firmware_patch_payload_reference": "upstream b8ffd1c; all patch_data keys except card_module_sha256 unchanged",
     "dual_firmware_fingerprint_cross_build_passed": true,
     "crc_retained_image_branch_abi_checks_passed": true,
     "camera_verified": false,
@@ -1995,7 +2025,8 @@
       "cold start recovers both logical page identities and preferences",
       "LCD DISP2 histogram bars/flicker and LCD/EVF portrait/bank transitions",
       "native-level EVF appearance and earlier hard hang remain unverified",
-      "Custom DISP root/page/level half-press exit and return to SETUP preserves Extensions label"
+      "Custom DISP root/page/level half-press exit and return to SETUP preserves Extensions label",
+      "Detailed-info off hides white balance on LCD/EVF; on/disable restores it"
     ],
     "performance": "60Hz request target (16/17ms), histogram acquisition start interval >=120ms; no measured physical fps or speedup claim",
     "known_prior_feedback": "L38 LCD landscape custom DISP2 histogram slow/empty/flickering; L39 removes native DISP2-specific route but root cause and improvement need camera confirmation",
@@ -2016,20 +2047,28 @@
       "exit_without_back_host_test": true,
       "camera_verified": false
     },
+    "white_balance_fix": {
+      "group": 38,
+      "native_simple_also_visible": true,
+      "extra_hide_only_when_details_off": true,
+      "both_main_initializers_checked": true,
+      "four_logical_pages_both_outputs_host_test": true,
+      "camera_verified": false
+    },
     "data_archive": {
-      "path": "build/l39-menu-label-fix-final.zip",
-      "version": "l39-menu-label-fix",
-      "sha256": "04ec7c0f9bbaa0dca3f2d9b39d9b8a8533914cb1cc595b24532111a827f90d33",
-      "size": 470304,
+      "path": "build/l39-menu-wb-fix.zip",
+      "version": "l39-menu-wb-fix",
+      "sha256": "a7c41b560453f66e1df468d3394dfbe89c4ef63bfb41409a70157cb458ba3e9c",
+      "size": 470353,
       "members": [
         "manifest.json",
-        "card/Z5APP.BIN",
-        "card/SHUTTER/2.WAV",
-        "card/SHUTTER/5.WAV",
-        "card/SHUTTER/3.WAV",
-        "patch_data/patches.json",
+        "card/SHUTTER/4.WAV",
         "card/SHUTTER/1.WAV",
-        "card/SHUTTER/4.WAV"
+        "patch_data/patches.json",
+        "card/Z5APP.BIN",
+        "card/SHUTTER/5.WAV",
+        "card/SHUTTER/2.WAV",
+        "card/SHUTTER/3.WAV"
       ],
       "import_and_verify_passed": true
     }
